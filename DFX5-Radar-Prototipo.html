@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DFX5 Radar — Hub de Recursos</title>
+<style>
+  :root{
+    --bg:#0a0e1f;
+    --bg2:#0f1330;
+    --panel:#131735;
+    --panel2:#171b3d;
+    --border:#2a2f5c;
+    --purple:#8b3ffc;
+    --purple2:#a855f7;
+    --purple-glow: rgba(139,63,252,0.35);
+    --pink:#e0559a;
+    --text:#eef0fb;
+    --text-dim:#9ba0c9;
+    --text-dim2:#6b7099;
+    --success:#22c55e;
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 15% 0%, rgba(139,63,252,0.18), transparent 45%),
+      radial-gradient(circle at 85% 10%, rgba(224,85,154,0.12), transparent 40%),
+      var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+
+  /* HERO */
+  .hero{
+    position:relative;
+    padding:48px 6vw 40px;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(139,63,252,0.35), transparent 55%),
+      radial-gradient(circle at 90% 0%, rgba(224,85,154,0.25), transparent 45%),
+      linear-gradient(135deg, #0b0e24 0%, #141a3d 60%, #1c1440 100%);
+    border-bottom:1px solid var(--border);
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";
+    position:absolute; inset:0;
+    background-image: radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px);
+    background-size: 26px 26px;
+    opacity:0.5;
+    pointer-events:none;
+  }
+  .hero-top{ display:flex; align-items:center; justify-content:space-between; gap:20px; position:relative; z-index:1; flex-wrap:wrap;}
+  .brand{ display:flex; align-items:center; gap:14px; }
+  .logo-node{ width:46px; height:46px; flex-shrink:0; }
+  .brand-text h1{ font-size:22px; letter-spacing:0.5px; font-weight:700; }
+  .brand-text h1 span{ color:var(--purple2); }
+  .brand-text p{ font-size:12px; color:var(--text-dim); margin-top:2px; letter-spacing:0.3px;}
+
+  .hero-controls{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+
+  .user-chip{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid var(--border);
+    padding:6px 14px 6px 6px; border-radius:999px;
+  }
+  .avatar{
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg, var(--purple), var(--pink));
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:#fff;
+  }
+  .user-meta-name{ font-size:12.5px; font-weight:600; line-height:1.3; }
+  .user-meta-email{ font-size:10.5px; color:var(--text-dim2); line-height:1.3; }
+  .role-badge{ font-size:10px; font-weight:700; padding:3px 9px; border-radius:999px; letter-spacing:0.3px; white-space:nowrap; }
+  .role-badge.role-admin{ background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff; }
+  .btn-logout{ font-size:11px; color:var(--text-dim2); cursor:pointer; background:none; border:none; text-decoration:underline; padding:0; }
+  .btn-logout:hover{ color:var(--text); }
+
+  .admin-toggle{
+    display:flex; align-items:center; gap:10px;
+    background:var(--panel); border:1px solid var(--border);
+    padding:8px 14px; border-radius:999px; font-size:13px; color:var(--text-dim);
+    cursor:pointer; user-select:none; transition:.2s;
+  }
+  .admin-toggle:hover{ border-color:var(--purple); color:var(--text); }
+  .admin-toggle.active{ background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff; border-color:transparent;}
+  .switch{ width:34px; height:18px; border-radius:20px; background:#3a3e6b; position:relative; transition:.2s; flex-shrink:0;}
+  .switch::after{ content:""; position:absolute; width:14px; height:14px; border-radius:50%; background:#fff; top:2px; left:2px; transition:.2s;}
+  .admin-toggle.active .switch{ background:rgba(255,255,255,0.35); }
+  .admin-toggle.active .switch::after{ left:18px; }
+
+  .hero-headline{ margin-top:36px; position:relative; z-index:1; max-width:680px;}
+  .hero-headline h2{ font-size:30px; font-weight:800; line-height:1.25; }
+  .hero-headline p{ margin-top:10px; color:var(--text-dim); font-size:14.5px; line-height:1.55; }
+
+  .search-wrap{ margin-top:26px; position:relative; z-index:1; max-width:640px; }
+  .search-box{
+    display:flex; align-items:center; gap:10px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid var(--border);
+    border-radius:12px; padding:13px 16px;
+    backdrop-filter: blur(6px);
+  }
+  .search-box:focus-within{ border-color:var(--purple2); box-shadow:0 0 0 3px var(--purple-glow); }
+  .search-box input{
+    flex:1; background:transparent; border:none; outline:none;
+    color:var(--text); font-size:14.5px;
+  }
+  .search-box input::placeholder{ color:var(--text-dim2); }
+  .search-box svg{ flex-shrink:0; opacity:0.7; }
+  .kbd{ font-size:11px; color:var(--text-dim2); border:1px solid var(--border); padding:2px 6px; border-radius:5px; }
+
+  .stats-row{ display:flex; gap:22px; margin-top:20px; position:relative; z-index:1; flex-wrap:wrap;}
+  .stat{ font-size:12.5px; color:var(--text-dim); }
+  .stat b{ color:var(--text); font-size:15px; margin-right:5px; }
+
+  /* TABS */
+  .tabs{ display:flex; gap:10px; max-width:1280px; margin:24px auto 0; padding:0 6vw; flex-wrap:wrap; }
+  .tab-btn{
+    display:flex; align-items:center; gap:8px; padding:10px 18px; border-radius:12px;
+    border:1px solid var(--border); background:var(--panel); color:var(--text-dim);
+    cursor:pointer; font-size:13.5px; font-weight:600; transition:.15s;
+  }
+  .tab-btn:hover{ border-color:var(--purple2); color:var(--text); }
+  .tab-btn.active{ background:linear-gradient(135deg, var(--purple), var(--pink)); color:#fff; border-color:transparent; box-shadow:0 8px 20px -10px var(--purple-glow); }
+  .tab-btn .tab-count{ font-size:11px; opacity:.85; background:rgba(255,255,255,0.15); padding:1px 7px; border-radius:999px; }
+  .tab-btn.active .tab-count{ background:rgba(255,255,255,0.25); }
+
+  /* FILTERS */
+  .filters{
+    max-width:1280px; margin:18px auto 0; padding:0 6vw;
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+  }
+  .filter-label{ font-size:11.5px; text-transform:uppercase; letter-spacing:1px; color:var(--text-dim2); margin-right:4px; }
+  .chip{
+    padding:7px 14px; border-radius:999px; font-size:13px; cursor:pointer;
+    border:1px solid var(--border); background:var(--panel); color:var(--text-dim);
+    transition:.15s; white-space:nowrap;
+  }
+  .chip:hover{ border-color:var(--purple2); color:var(--text); }
+  .chip.active{ background:linear-gradient(135deg, var(--purple), #6d28d9); border-color:transparent; color:#fff; }
+
+  /* MAIN */
+  main{ max-width:1280px; margin:0 auto; padding:22px 6vw 0; }
+  .project-group{ margin-bottom:34px; }
+  .project-head{ display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .project-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .project-head h3{ font-size:15.5px; font-weight:700; }
+  .project-head .count{ font-size:12px; color:var(--text-dim2); background:var(--panel); border:1px solid var(--border); padding:2px 9px; border-radius:999px;}
+  .leader-badge{ font-size:10.5px; color:var(--text-dim2); background:var(--panel); border:1px solid var(--border); padding:2px 9px; border-radius:999px; }
+  .btn-manage{ font-size:11.5px; padding:5px 12px; border-radius:8px; background:var(--panel); border:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-weight:600; }
+  .btn-manage:hover{ border-color:var(--purple2); color:var(--text); }
+
+  .grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:14px; }
+
+  .card{
+    background:linear-gradient(180deg, var(--panel), var(--panel2));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:16px;
+    position:relative;
+    transition:.18s;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .card:hover{ border-color:var(--purple2); transform:translateY(-2px); box-shadow:0 10px 30px -12px var(--purple-glow); }
+
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .cat-badge{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:11px; font-weight:600; padding:4px 9px; border-radius:7px;
+    letter-spacing:0.3px;
+  }
+  .cat-aws{ background:rgba(255,159,10,0.15); color:#ffb454; }
+  .cat-connect{ background:rgba(139,63,252,0.18); color:#b088ff; }
+  .cat-lambda{ background:rgba(255,159,10,0.15); color:#ff9f7a; }
+  .cat-logs{ background:rgba(34,197,94,0.15); color:#4ade80; }
+  .cat-doc{ background:rgba(56,189,248,0.15); color:#7dd3fc; }
+  .cat-otro{ background:rgba(224,85,154,0.15); color:#f0a8ce; }
+
+  .card h4{ font-size:15px; font-weight:700; margin-top:2px; line-height:1.3; }
+  .card .desc{ font-size:12.8px; color:var(--text-dim); line-height:1.5; flex:1; }
+  .card .proj-tag{ font-size:11px; color:var(--text-dim2); }
+
+  .card-actions{ display:flex; gap:8px; margin-top:4px; }
+  .btn-open{
+    flex:1; text-align:center; padding:8px 10px; border-radius:9px; font-size:12.5px; font-weight:600;
+    background:linear-gradient(135deg, var(--purple), #6d28d9); color:#fff; text-decoration:none;
+    transition:.15s;
+  }
+  .btn-open:hover{ filter:brightness(1.12); }
+  .icon-btn{
+    width:34px; height:34px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+    background:var(--panel); border:1px solid var(--border); cursor:pointer; color:var(--text-dim); flex-shrink:0;
+  }
+  .icon-btn:hover{ color:var(--text); border-color:var(--purple2); }
+  .icon-btn.danger:hover{ color:#f87171; border-color:#f87171; }
+  .admin-only{ display:none; }
+  body.admin-mode .admin-only{ display:flex; }
+  body.admin-mode .admin-only-inline{ display:inline-flex; }
+
+  .locked-card{
+    background:var(--panel); border:1px dashed var(--border); border-radius:var(--radius);
+    padding:16px; display:flex; flex-direction:column; gap:8px;
+  }
+  .locked-card h4{ font-size:14px; }
+  .locked-card p{ font-size:12px; color:var(--text-dim2); line-height:1.5; flex:1; }
+  .btn-request{
+    align-self:flex-start; padding:7px 14px; border-radius:9px; background:var(--panel2);
+    border:1px solid var(--border); color:var(--text-dim); font-size:12px; cursor:pointer; font-weight:600;
+  }
+  .btn-request:hover{ border-color:var(--purple2); color:var(--text); }
+
+  .fab{
+    position:fixed; bottom:26px; right:26px; z-index:40;
+    display:none; align-items:center; gap:8px;
+    background:linear-gradient(135deg, var(--purple2), var(--pink));
+    color:#fff; border:none; padding:14px 20px; border-radius:999px;
+    font-size:14px; font-weight:700; cursor:pointer;
+    box-shadow:0 10px 30px -8px var(--purple-glow);
+  }
+  .fab:hover{ filter:brightness(1.08); }
+
+  .empty{ text-align:center; padding:60px 20px; color:var(--text-dim2); }
+  .empty svg{ opacity:0.35; margin-bottom:12px; }
+
+  /* MODAL */
+  .overlay{
+    position:fixed; inset:0; background:rgba(5,6,16,0.72); backdrop-filter:blur(3px);
+    display:none; align-items:center; justify-content:center; z-index:100; padding:20px;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background:var(--panel2); border:1px solid var(--border); border-radius:16px;
+    width:100%; max-width:460px; padding:24px; max-height:88vh; overflow-y:auto;
+  }
+  .modal h3{ font-size:17px; margin-bottom:4px; }
+  .modal .sub{ font-size:12.5px; color:var(--text-dim2); margin-bottom:18px; line-height:1.5; }
+  .field{ margin-bottom:14px; }
+  .field label{ font-size:12px; color:var(--text-dim); display:block; margin-bottom:6px; font-weight:600;}
+  .field input, .field select, .field textarea{
+    width:100%; background:var(--panel); border:1px solid var(--border); border-radius:9px;
+    padding:10px 12px; color:var(--text); font-size:13.5px; outline:none; font-family:inherit;
+  }
+  .field input:focus, .field select:focus, .field textarea:focus{ border-color:var(--purple2); }
+  .field textarea{ resize:vertical; min-height:60px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:20px; }
+  .btn-cancel{ flex:1; padding:11px; border-radius:9px; background:var(--panel); border:1px solid var(--border); color:var(--text-dim); cursor:pointer; font-size:13.5px; font-weight:600;}
+  .btn-save{ flex:1; padding:11px; border-radius:9px; background:linear-gradient(135deg, var(--purple), #6d28d9); border:none; color:#fff; cursor:pointer; font-size:13.5px; font-weight:700;}
+  .btn-cancel:hover{ color:var(--text); }
+
+  .access-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border); }
+  .access-row:last-child{ border-bottom:none; }
+  .access-row input[type=checkbox]{ width:18px; height:18px; accent-color:var(--purple2); cursor:pointer; }
+
+  .toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel2); border:1px solid var(--purple2); padding:11px 20px; border-radius:10px;
+    font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:200;
+    display:flex; align-items:center; gap:8px;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  footer{ text-align:center; padding:30px 20px 10px; color:var(--text-dim2); font-size:11.5px; }
+
+  .select-user{ background:transparent; border:none; color:var(--text); font-size:13px; outline:none; cursor:pointer; max-width:150px; }
+  .select-user option{ background:var(--panel2); color:var(--text); }
+
+  @media (max-width:640px){
+    .hero{ padding:32px 5vw 30px; }
+    .hero-headline h2{ font-size:23px; }
+    main, .filters, .tabs{ padding-left:5vw; padding-right:5vw; }
+  }
+</style>
+</head>
+<body>
+
+<div id="appRoot">
+
+<div class="hero">
+  <div class="hero-top">
+    <div class="brand">
+      <svg class="logo-node" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="18" r="10" fill="#a855f7"/>
+        <circle cx="20" cy="40" r="10" fill="#8b3ffc"/>
+        <circle cx="80" cy="40" r="10" fill="#8b3ffc"/>
+        <circle cx="50" cy="55" r="12" fill="#c084fc"/>
+        <circle cx="20" cy="75" r="10" fill="#8b3ffc"/>
+        <circle cx="80" cy="75" r="10" fill="#8b3ffc"/>
+        <line x1="50" y1="18" x2="50" y2="55" stroke="#6d28d9" stroke-width="4"/>
+        <line x1="20" y1="40" x2="50" y2="55" stroke="#6d28d9" stroke-width="4"/>
+        <line x1="80" y1="40" x2="50" y2="55" stroke="#6d28d9" stroke-width="4"/>
+        <line x1="20" y1="75" x2="50" y2="55" stroke="#6d28d9" stroke-width="4"/>
+        <line x1="80" y1="75" x2="50" y2="55" stroke="#6d28d9" stroke-width="4"/>
+      </svg>
+      <div class="brand-text">
+        <h1>DFX5 <span>Radar</span></h1>
+        <p>Todos los recursos de tus proyectos, en un solo lugar</p>
+      </div>
+    </div>
+    <div class="hero-controls">
+      <div class="user-chip">
+        <div class="avatar" id="userAvatar"></div>
+        <select id="userSelect" class="select-user" onchange="setCurrentUser(this.value)"></select>
+        <span class="role-badge" id="roleBadge" style="display:none;"></span>
+      </div>
+      <div class="admin-toggle" id="adminToggle" onclick="toggleAdmin()">
+        <span class="switch"></span>
+        <span id="adminLabel">Modo edición</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-headline">
+    <h2>Deja de buscar. Empieza a encontrar.</h2>
+    <p>DFX5 (generales), Clientes DFX5 (acceso otorgado entre administradores del proyecto) y Mis Links (privados de cada persona) — accesibles con un clic, documentados y siempre actualizados por el propio equipo.</p>
+  </div>
+
+  <div class="search-wrap">
+    <div class="search-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9ba0c9" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Busca por proyecto, cuenta, Lambda, log..." oninput="render()">
+      <span class="kbd">/</span>
+    </div>
+  </div>
+
+  <div class="stats-row" id="statsRow"></div>
+</div>
+
+<div class="tabs" id="tabs"></div>
+
+<div class="filters" id="categoryFilters">
+  <span class="filter-label">Categoría</span>
+</div>
+<div class="filters" id="projectFilters" style="margin-top:8px;">
+  <span class="filter-label">Proyecto</span>
+</div>
+
+<main id="main"></main>
+
+<footer>DFX5 Radar — Prototipo interno · Datos de ejemplo para fines de propuesta · Permisos simulados localmente (sin backend real)</footer>
+
+<button class="fab" id="fab" onclick="openModal()">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  Agregar link
+</button>
+
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <h3 id="modalTitle">Agregar nuevo link</h3>
+    <p class="sub" id="modalSub">Este recurso quedará visible al instante.</p>
+    <input type="hidden" id="editId">
+    <input type="hidden" id="modalScope" value="dfx5">
+    <div class="field" id="projectFieldContainer">
+      <label>Proyecto / Cliente</label>
+      <select id="f_project"></select>
+    </div>
+    <div class="field" id="categoryFieldContainer">
+      <label>Categoría</label>
+      <select id="f_category"></select>
+    </div>
+    <div class="field">
+      <label>Nombre del recurso</label>
+      <input id="f_name" placeholder="Ej: Connect - Instancia Ventas">
+    </div>
+    <div class="field">
+      <label>URL</label>
+      <input id="f_url" placeholder="https://...">
+    </div>
+    <div class="field">
+      <label>Descripción — ¿qué es y para qué sirve?</label>
+      <textarea id="f_desc" placeholder="Ej: Instancia de Amazon Connect usada para el flujo de ventas. Revisar aquí si hay caídas en llamadas entrantes."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveLink()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="accessOverlay">
+  <div class="modal">
+    <h3>Administradores — <span id="accessProjectName"></span></h3>
+    <p class="sub">Cualquier administrador puede agregar recursos y dar acceso a más ingenieros. Al dar acceso, esa persona también se vuelve administrador del proyecto.</p>
+    <div id="accessList"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeAccessModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="projectOverlay">
+  <div class="modal" style="max-width:400px;">
+    <h3>Crear nuevo proyecto</h3>
+    <p class="sub">Al crearlo serás su primer administrador. Podrás dar acceso a más ingenieros — ellos también se volverán administradores del proyecto.</p>
+    <div class="field"><label>Nombre del proyecto / cliente</label><input id="np_name" placeholder="Ej: Cliente Logística Norte"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeNewProjectModal()">Cancelar</button>
+      <button class="btn-save" onclick="createProject()">Crear proyecto</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div>
+
+<script>
+const USERS_KEY = 'dfx5_radar_users_v2';
+const LINKS_KEY = 'dfx5_radar_links_v2';
+const PROJECTS_KEY = 'dfx5_radar_projects_v2';
+const CURRENT_USER_KEY = 'dfx5_radar_current_user_v2';
+
+const ICON_DFX5 = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>';
+const ICON_PROJECT = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+const ICON_USER = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>';
+const ICON_LOCK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7099" stroke-width="1.8"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+const ICON_EDIT = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+const ICON_TRASH = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>';
+const ICON_SEARCH_BIG = '<svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#6b7099" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+
+const seedUsers = [
+  {id:'u1', name:'Desireé López', email:'desiree@dfx5.com', password:'demo123', isGlobalAdmin:true},
+  {id:'u2', name:'Carlos Méndez', email:'carlos@dfx5.com', password:'demo123', isGlobalAdmin:false},
+  {id:'u3', name:'Ana Torres', email:'ana@dfx5.com', password:'demo123', isGlobalAdmin:false},
+  {id:'u4', name:'Luis Ramírez', email:'luis@dfx5.com', password:'demo123', isGlobalAdmin:false},
+];
+
+const seedProjects = [
+  {id:'proj1', name:'Cliente Retail Corp', admins:['u1','u2']},
+  {id:'proj2', name:'Cliente Banca XYZ', admins:['u3']},
+  {id:'proj3', name:'Cliente Salud Plus', admins:['u1','u4']},
+];
+
+const seedLinks = [
+  // ---- DFX5 (generales, visibles para todo el equipo, solo Admin DFX5 edita) ----
+  {id:'d1', scope:'dfx5', category:'AWS Console', name:'AWS Console — Cuenta Organización DFX5', url:'https://console.aws.amazon.com/', desc:'Cuenta raíz de AWS Organizations. Gestiona las cuentas de todos los clientes desde aquí.'},
+  {id:'d2', scope:'dfx5', category:'Documentación', name:'Wiki interna DFX5', url:'https://confluence.dfx5.internal/', desc:'Documentación de procesos internos, onboarding y políticas del equipo.'},
+  {id:'d3', scope:'dfx5', category:'Otro', name:'Slack — Workspace DFX5', url:'https://dfx5.slack.com/', desc:'Canal principal de comunicación del equipo.'},
+  {id:'d4', scope:'dfx5', category:'Otro', name:'GitHub — Repos DFX5', url:'https://github.com/dfx5', desc:'Código fuente de librerías compartidas y plantillas de Connect reutilizables entre proyectos.'},
+
+  // ---- Clientes DFX5 (acceso = ser administrador del proyecto) ----
+  {id:'1', scope:'proyecto', project:'Cliente Retail Corp', category:'AWS Console', name:'AWS Console — Cuenta Producción', url:'https://console.aws.amazon.com/', desc:'Cuenta principal de AWS del cliente. Acceso a todos los servicios desplegados en producción.'},
+  {id:'2', scope:'proyecto', project:'Cliente Retail Corp', category:'Amazon Connect', name:'Connect — Instancia Ventas', url:'https://us-east-1.console.aws.amazon.com/connect/', desc:'Instancia de Connect para el flujo de ventas telefónicas. Revisar aquí ante caídas de llamadas entrantes.'},
+  {id:'3', scope:'proyecto', project:'Cliente Retail Corp', category:'Amazon Connect', name:'Connect — Instancia Soporte', url:'https://us-east-1.console.aws.amazon.com/connect/', desc:'Instancia separada para soporte postventa. No compartir agentes con la instancia de Ventas.'},
+  {id:'4', scope:'proyecto', project:'Cliente Retail Corp', category:'Lambda', name:'Lambda — IVR Router', url:'https://console.aws.amazon.com/lambda/', desc:'Enruta llamadas del IVR según horario y disponibilidad de colas. Punto crítico del flujo.'},
+  {id:'5', scope:'proyecto', project:'Cliente Retail Corp', category:'Logs', name:'CloudWatch — Errores Contact Flow', url:'https://console.aws.amazon.com/cloudwatch/', desc:'Log group con errores de ejecución de los contact flows. Primer lugar a revisar ante fallas reportadas.'},
+
+  {id:'6', scope:'proyecto', project:'Cliente Banca XYZ', category:'AWS Console', name:'AWS Console — Cuenta Producción', url:'https://console.aws.amazon.com/', desc:'Cuenta AWS aislada del cliente banca, por requerimiento de compliance.'},
+  {id:'7', scope:'proyecto', project:'Cliente Banca XYZ', category:'Amazon Connect', name:'Connect — Instancia Cobranza', url:'https://us-east-1.console.aws.amazon.com/connect/', desc:'Instancia usada para campañas de cobranza outbound.'},
+  {id:'8', scope:'proyecto', project:'Cliente Banca XYZ', category:'Lambda', name:'Lambda — Validación Identidad', url:'https://console.aws.amazon.com/lambda/', desc:'Valida identidad del cliente contra Customer Profiles antes de enrutar la llamada.'},
+  {id:'9', scope:'proyecto', project:'Cliente Banca XYZ', category:'Logs', name:'CloudWatch — Lambda Validación', url:'https://console.aws.amazon.com/cloudwatch/', desc:'Logs específicos de la Lambda de validación de identidad. Útil para depurar rechazos falsos.'},
+  {id:'10', scope:'proyecto', project:'Cliente Banca XYZ', category:'Otro', name:'Customer Profiles — Domain Banca', url:'https://console.aws.amazon.com/customerprofiles/', desc:'Dominio de Customer Profiles con los perfiles unificados de clientes del banco.'},
+
+  {id:'11', scope:'proyecto', project:'Cliente Salud Plus', category:'AWS Console', name:'AWS Console — Cuenta Producción', url:'https://console.aws.amazon.com/', desc:'Cuenta AWS del proyecto de agendamiento de citas médicas.'},
+  {id:'12', scope:'proyecto', project:'Cliente Salud Plus', category:'Amazon Connect', name:'Connect — Instancia Citas Médicas', url:'https://us-east-1.console.aws.amazon.com/connect/', desc:'Instancia con IVR conversacional (Lex + Bedrock) para agendar y confirmar citas.'},
+  {id:'13', scope:'proyecto', project:'Cliente Salud Plus', category:'Lambda', name:'Lambda — Sync Agenda Médica', url:'https://console.aws.amazon.com/lambda/', desc:'Sincroniza disponibilidad de doctores con el sistema externo de agendamiento.'},
+  {id:'14', scope:'proyecto', project:'Cliente Salud Plus', category:'Logs', name:'CloudWatch — Agente IA (Bedrock)', url:'https://console.aws.amazon.com/cloudwatch/', desc:'Logs de las respuestas del agente de IA. Revisar aquí si el agente responde algo incorrecto.'},
+
+  // ---- Mis Links (privados, solo visibles para el dueño) ----
+  {id:'p1', scope:'propio', owner:'u1', category:'Documentación', name:'Notas — Roadmap Radar Fase 2', url:'https://notion.so/roadmap-radar', desc:'Borrador de arquitectura para el backend real: auth, permisos por proyecto y persistencia.'},
+  {id:'p2', scope:'propio', owner:'u1', category:'Otro', name:'Snippets — Plantillas Lambda', url:'https://github.com/dlopez/snippets', desc:'Fragmentos de código reutilizables para Lambdas de Connect.'},
+  {id:'p3', scope:'propio', owner:'u2', category:'Otro', name:'Checklist personal — Guardias', url:'https://docs.google.com/checklist-guardia', desc:'Mi checklist antes de tomar turno de guardia en Retail Corp.'},
+];
+
+const CATEGORY_ICONS = {
+  'AWS Console':'cat-aws', 'Amazon Connect':'cat-connect', 'Lambda':'cat-lambda', 'Logs':'cat-logs', 'Documentación':'cat-doc', 'Otro':'cat-otro'
+};
+const PROJECT_COLORS = {};
+const PALETTE = ['#8b3ffc','#e0559a','#22c55e','#f59e0b','#38bdf8','#f472b6'];
+
+let state = { tab:'dfx5', category:'Todos', project:'Todos' };
+
+/* ---------- persistence ---------- */
+function loadUsers(){
+  const raw = localStorage.getItem(USERS_KEY);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  localStorage.setItem(USERS_KEY, JSON.stringify(seedUsers));
+  return seedUsers;
+}
+function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+
+function loadLinks(){
+  const raw = localStorage.getItem(LINKS_KEY);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  localStorage.setItem(LINKS_KEY, JSON.stringify(seedLinks));
+  return seedLinks;
+}
+function saveLinks(d){ localStorage.setItem(LINKS_KEY, JSON.stringify(d)); }
+
+function loadProjects(){
+  const raw = localStorage.getItem(PROJECTS_KEY);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  localStorage.setItem(PROJECTS_KEY, JSON.stringify(seedProjects));
+  return seedProjects;
+}
+function saveProjects(p){ localStorage.setItem(PROJECTS_KEY, JSON.stringify(p)); }
+
+function getCurrentUser(){
+  const users = loadUsers();
+  const id = localStorage.getItem(CURRENT_USER_KEY);
+  return users.find(u=>u.id===id) || users[0];
+}
+function setCurrentUser(id){ localStorage.setItem(CURRENT_USER_KEY, id); render(); }
+
+/* ---------- permissions ---------- */
+function isProjectAdmin(user, projectName, projects){
+  const p = projects.find(pr=>pr.name===projectName);
+  return !!p && p.admins.includes(user.id);
+}
+function canEdit(link, user, projects){
+  if(link.scope==='dfx5') return user.isGlobalAdmin;
+  if(link.scope==='proyecto') return isProjectAdmin(user, link.project, projects);
+  if(link.scope==='propio') return link.owner===user.id;
+  return false;
+}
+function getAdminProjects(user, projects){ return projects.filter(p=>p.admins.includes(user.id)).map(p=>p.name); }
+function getProjectAdminNames(projectName, projects, users){
+  const p = projects.find(pr=>pr.name===projectName);
+  if(!p || !p.admins.length) return 'nadie todavía';
+  return p.admins.map(id=>{ const u = users.find(x=>x.id===id); return u ? u.name : '—'; }).join(', ');
+}
+function canAddInCurrentTab(user, projects){
+  if(state.tab==='dfx5') return user.isGlobalAdmin;
+  if(state.tab==='propio') return true;
+  if(state.tab==='proyecto') return getAdminProjects(user, projects).length>0;
+  return false;
+}
+function getProjectColor(project){
+  if(!PROJECT_COLORS[project]){ PROJECT_COLORS[project] = PALETTE[Object.keys(PROJECT_COLORS).length % PALETTE.length]; }
+  return PROJECT_COLORS[project];
+}
+function initials(name){ return name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join(''); }
+
+/* ---------- top controls ---------- */
+function toggleAdmin(){
+  document.body.classList.toggle('admin-mode');
+  const on = document.body.classList.contains('admin-mode');
+  document.getElementById('adminToggle').classList.toggle('active', on);
+  document.getElementById('adminLabel').textContent = on ? 'Editando' : 'Modo edición';
+  showToast(on ? 'Modo edición activado — ya puedes agregar o editar lo que te corresponda' : 'Modo edición desactivado');
+  render();
+}
+
+function setTab(tab){ state.tab = tab; state.category = 'Todos'; state.project = 'Todos'; render(); }
+function setFilter(type, value){ state[type] = value; render(); }
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=> t.classList.remove('show'), 2400);
+}
+
+function requestAccess(project){
+  const projects = loadProjects(); const users = loadUsers();
+  showToast(`Solicitud de acceso enviada a los administradores de ${project} (${getProjectAdminNames(project, projects, users)})`);
+}
+
+/* ---------- new project ---------- */
+function openNewProjectModal(){ document.getElementById('projectOverlay').classList.add('show'); }
+function closeNewProjectModal(){ document.getElementById('projectOverlay').classList.remove('show'); document.getElementById('np_name').value=''; }
+function createProject(){
+  const name = document.getElementById('np_name').value.trim();
+  if(!name){ showToast('Escribe un nombre de proyecto'); return; }
+  const projects = loadProjects();
+  if(projects.some(p=>p.name.toLowerCase()===name.toLowerCase())){ showToast('Ya existe un proyecto con ese nombre'); return; }
+  const currentUser = getCurrentUser();
+  projects.push({id:'proj_'+Date.now(), name, admins:[currentUser.id]});
+  saveProjects(projects);
+  closeNewProjectModal();
+  state.tab = 'proyecto'; state.category = 'Todos'; state.project = name;
+  showToast('Proyecto creado — ya eres administrador');
+  render();
+}
+
+/* ---------- link modal ---------- */
+function openModal(link){
+  const currentUser = getCurrentUser();
+  const projects = loadProjects();
+  const scope = link ? link.scope : state.tab;
+
+  if(!link && !canAddInCurrentTab(currentUser, projects)){ showToast('No tienes permiso para agregar links aquí.'); return; }
+  if(link && !canEdit(link, currentUser, projects)){ showToast('No tienes permiso para editar este link.'); return; }
+
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('modalScope').value = scope;
+
+  const titles = {dfx5:'recurso DFX5', proyecto:'recurso de proyecto', propio:'link propio (privado)'};
+  document.getElementById('modalTitle').textContent = (link ? 'Editar ' : 'Agregar nuevo ') + titles[scope];
+  document.getElementById('modalSub').textContent =
+    scope==='dfx5' ? 'Visible para todo el equipo DFX5.' :
+    scope==='proyecto' ? 'Visible solo para los administradores de este proyecto.' :
+    'Privado — solo tú lo puedes ver.';
+
+  document.getElementById('editId').value = link ? link.id : '';
+
+  const pc = document.getElementById('projectFieldContainer');
+  if(scope==='proyecto'){
+    pc.style.display = 'block';
+    const adminProjects = getAdminProjects(currentUser, projects);
+    pc.innerHTML = `
+      <label>Proyecto / Cliente (solo donde eres administrador)</label>
+      <select id="f_project" onchange="onProjectSelectChange()">
+        <option value="" disabled ${!link ? 'selected' : ''}>Selecciona un proyecto...</option>
+        ${adminProjects.map(p=>`<option value="${p.replace(/"/g,'&quot;')}" ${link && link.project===p ? 'selected' : ''}>${p}</option>`).join('')}
+        <option value="__new__">+ Agregar nuevo proyecto...</option>
+      </select>
+      <input id="f_project_new" placeholder="Nombre del nuevo proyecto" style="display:none;margin-top:8px;">
+    `;
+  } else {
+    pc.style.display = 'none';
+    pc.innerHTML = '<input id="f_project" type="hidden" value=""><input id="f_project_new" type="hidden" value="">';
+  }
+
+  const cc = document.getElementById('categoryFieldContainer');
+  const defaultCats = ['AWS Console','Amazon Connect','Lambda','Logs','Documentación','Otro'];
+  const extraCats = [...new Set(loadLinks().map(l=>l.category))].filter(c=>c && !defaultCats.includes(c));
+  const allCats = [...defaultCats, ...extraCats];
+  cc.innerHTML = `
+    <label>Categoría</label>
+    <select id="f_category" onchange="onCategorySelectChange()">
+      <option value="" disabled ${!link ? 'selected' : ''}>Selecciona una categoría...</option>
+      ${allCats.map(c=>`<option value="${c.replace(/"/g,'&quot;')}" ${link && link.category===c ? 'selected' : ''}>${c}</option>`).join('')}
+      <option value="__new__">+ Agregar nueva categoría...</option>
+    </select>
+    <input id="f_category_new" placeholder="Nombre de la nueva categoría" style="display:none;margin-top:8px;">
+  `;
+
+  document.getElementById('f_name').value = link ? link.name : '';
+  document.getElementById('f_url').value = link ? link.url : '';
+  document.getElementById('f_desc').value = link ? link.desc : '';
+}
+function closeModal(){ document.getElementById('overlay').classList.remove('show'); }
+
+function onProjectSelectChange(){
+  const sel = document.getElementById('f_project');
+  const newInput = document.getElementById('f_project_new');
+  if(!sel || !newInput) return;
+  newInput.style.display = sel.value === '__new__' ? 'block' : 'none';
+  if(sel.value === '__new__') newInput.focus();
+}
+function onCategorySelectChange(){
+  const sel = document.getElementById('f_category');
+  const newInput = document.getElementById('f_category_new');
+  if(!sel || !newInput) return;
+  newInput.style.display = sel.value === '__new__' ? 'block' : 'none';
+  if(sel.value === '__new__') newInput.focus();
+}
+
+function saveLink(){
+  const currentUser = getCurrentUser();
+  const projects = loadProjects();
+  const id = document.getElementById('editId').value;
+  const scope = document.getElementById('modalScope').value;
+
+  let category = document.getElementById('f_category').value;
+  if(category === '__new__'){ category = document.getElementById('f_category_new').value.trim(); }
+  if(!category){ showToast('Selecciona o escribe una categoría'); return; }
+
+  const name = document.getElementById('f_name').value.trim();
+  const url = document.getElementById('f_url').value.trim();
+  const desc = document.getElementById('f_desc').value.trim();
+
+  let project = '';
+  if(scope==='proyecto'){
+    const pf = document.getElementById('f_project');
+    let projectVal = pf ? pf.value : '';
+    if(projectVal === '__new__'){
+      const newName = document.getElementById('f_project_new').value.trim();
+      if(!newName){ showToast('Escribe el nombre del nuevo proyecto'); return; }
+      if(projects.some(p=>p.name.toLowerCase()===newName.toLowerCase())){
+        showToast('Ya existe un proyecto con ese nombre — selecciónalo de la lista'); return;
+      }
+      projects.push({id:'proj_'+Date.now(), name:newName, admins:[currentUser.id]});
+      saveProjects(projects);
+      projectVal = newName;
+    }
+    if(!projectVal || !isProjectAdmin(currentUser, projectVal, projects)){ showToast('Selecciona un proyecto donde seas administrador'); return; }
+    project = projectVal;
+  }
+  if(!name || !url){ showToast('Completa nombre y URL'); return; }
+
+  let data = loadLinks();
+  if(id){
+    data = data.map(l => l.id===id ? {...l, category, name, url, desc, ...(scope==='proyecto' ? {project} : {})} : l);
+    showToast('Link actualizado ✓');
+  } else {
+    const newLink = {id: Date.now().toString(), scope, category, name, url, desc};
+    if(scope==='proyecto') newLink.project = project;
+    if(scope==='propio') newLink.owner = currentUser.id;
+    data.push(newLink);
+    showToast('Link agregado ✓');
+  }
+  saveLinks(data);
+  closeModal();
+  render();
+}
+
+function deleteLink(id){
+  const currentUser = getCurrentUser();
+  const projects = loadProjects();
+  const data = loadLinks();
+  const link = data.find(l=>l.id===id);
+  if(!link || !canEdit(link, currentUser, projects)){ showToast('No tienes permiso para eliminar este link.'); return; }
+  if(!confirm('¿Eliminar este link?')) return;
+  saveLinks(data.filter(l=>l.id!==id));
+  showToast('Link eliminado');
+  render();
+}
+
+/* ---------- manage project admins ---------- */
+function openAccessModal(project){
+  const currentUser = getCurrentUser();
+  const projects = loadProjects();
+  if(!isProjectAdmin(currentUser, project, projects)){ showToast('Solo un administrador del proyecto puede gestionar accesos.'); return; }
+
+  const users = loadUsers();
+  const p = projects.find(pr=>pr.name===project);
+
+  document.getElementById('accessOverlay').classList.add('show');
+  document.getElementById('accessProjectName').textContent = project;
+
+  const rows = users.map(u=>{
+    const checked = p.admins.includes(u.id);
+    return `
+      <div class="access-row">
+        <div>
+          <div style="font-weight:600;font-size:13px;">${u.name}</div>
+          <div style="font-size:11.5px;color:var(--text-dim2);">${u.email}${checked ? ' · Administrador' : ''}</div>
+        </div>
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleProjectAdmin('${project.replace(/'/g,"&apos;")}','${u.id}',this.checked)">
+      </div>
+    `;
+  }).join('');
+  document.getElementById('accessList').innerHTML = rows || '<p style="font-size:12.5px;color:var(--text-dim2);">No hay usuarios registrados todavía.</p>';
+}
+function closeAccessModal(){ document.getElementById('accessOverlay').classList.remove('show'); }
+
+function toggleProjectAdmin(project, userId, checked){
+  const projects = loadProjects();
+  const p = projects.find(pr=>pr.name===project);
+  if(!p) return;
+
+  if(checked){
+    if(!p.admins.includes(userId)) p.admins.push(userId);
+    saveProjects(projects);
+    showToast('Ahora es administrador del proyecto');
+  } else {
+    if(p.admins.length<=1 && p.admins.includes(userId)){
+      showToast('No puedes quitar al último administrador del proyecto');
+      openAccessModal(project);
+      return;
+    }
+    p.admins = p.admins.filter(x=>x!==userId);
+    saveProjects(projects);
+    showToast('Acceso de administrador revocado');
+  }
+
+  const currentUser = getCurrentUser();
+  closeAccessModal();
+  render();
+  if(isProjectAdmin(currentUser, project, projects)) openAccessModal(project);
+}
+
+/* ---------- fab ---------- */
+function updateFabVisibility(user, projects){
+  const fab = document.getElementById('fab');
+  const adminMode = document.body.classList.contains('admin-mode');
+  fab.style.display = (adminMode && canAddInCurrentTab(user, projects)) ? 'flex' : 'none';
+}
+
+/* ---------- rendering ---------- */
+function renderUserChip(user){
+  document.getElementById('userAvatar').textContent = initials(user.name);
+  const sel = document.getElementById('userSelect');
+  const users = loadUsers();
+  sel.innerHTML = users.map(u=>`<option value="${u.id}" ${u.id===user.id ? 'selected' : ''}>${u.name}</option>`).join('');
+  const badge = document.getElementById('roleBadge');
+  if(user.isGlobalAdmin){ badge.textContent = 'Admin DFX5'; badge.className = 'role-badge role-admin'; badge.style.display = 'inline-flex'; }
+  else { badge.style.display = 'none'; }
+}
+
+function renderTabs(currentUser, allLinks, projects){
+  const dfx5Count = allLinks.filter(l=>l.scope==='dfx5').length;
+  const proyectoCount = allLinks.filter(l=>l.scope==='proyecto' && isProjectAdmin(currentUser, l.project, projects)).length;
+  const propioCount = allLinks.filter(l=>l.scope==='propio' && l.owner===currentUser.id).length;
+  const tabsDef = [
+    {key:'dfx5', label:'DFX5', count:dfx5Count, icon:ICON_DFX5},
+    {key:'proyecto', label:'Clientes DFX5', count:proyectoCount, icon:ICON_PROJECT},
+    {key:'propio', label:'Mis Links', count:propioCount, icon:ICON_USER},
+  ];
+  document.getElementById('tabs').innerHTML = tabsDef.map(t=>`
+    <div class="tab-btn ${state.tab===t.key ? 'active' : ''}" onclick="setTab('${t.key}')">
+      ${t.icon}<span>${t.label}</span><span class="tab-count">${t.count}</span>
+    </div>
+  `).join('');
+}
+
+function renderFilters(scopeLinks, accessibleProjects){
+  const defaultCats = ['AWS Console','Amazon Connect','Lambda','Logs','Documentación','Otro'];
+  const extraCats = [...new Set(scopeLinks.map(l=>l.category))].filter(c=>c && !defaultCats.includes(c));
+  const cats = ['Todos', ...defaultCats, ...extraCats];
+  document.getElementById('categoryFilters').innerHTML = '<span class="filter-label">Categoría</span>' + cats.map(c =>
+    `<span class="chip ${state.category===c ? 'active' : ''}" onclick="setFilter('category','${c}')">${c}</span>`
+  ).join('');
+
+  const projBox = document.getElementById('projectFilters');
+  if(state.tab==='proyecto'){
+    const projects = ['Todos', ...accessibleProjects];
+    projBox.style.display = 'flex';
+    projBox.innerHTML = '<span class="filter-label">Proyecto</span>' + projects.map(p =>
+      `<span class="chip ${state.project===p ? 'active' : ''}" onclick="setFilter('project','${p}')">${p}</span>`
+    ).join('') + `<button class="btn-manage admin-only" style="margin-left:auto;" onclick="openNewProjectModal()">+ Nuevo proyecto</button>`;
+  } else {
+    projBox.style.display = 'none';
+    projBox.innerHTML = '';
+  }
+}
+
+function cardHtml(user, l, projects){
+  const editable = canEdit(l, user, projects);
+  return `
+    <div class="card">
+      <div class="card-top">
+        <span class="cat-badge ${CATEGORY_ICONS[l.category] || 'cat-otro'}">${l.category}</span>
+        ${editable ? `
+        <div class="admin-only" style="gap:6px;">
+          <div class="icon-btn" onclick='openModal(${JSON.stringify(l).replace(/'/g,"&apos;")})' title="Editar">${ICON_EDIT}</div>
+          <div class="icon-btn danger" onclick="deleteLink('${l.id}')" title="Eliminar">${ICON_TRASH}</div>
+        </div>` : ''}
+      </div>
+      <h4>${l.name}</h4>
+      <p class="desc">${l.desc || 'Sin descripción.'}</p>
+      <div class="card-actions">
+        <a class="btn-open" href="${l.url}" target="_blank" rel="noopener">Abrir recurso →</a>
+      </div>
+    </div>
+  `;
+}
+
+function emptyState(msg){ return `<div class="empty">${ICON_SEARCH_BIG}<p>${msg}</p></div>`; }
+
+function projectGroupHtml(user, users, projects, project, links){
+  const adminNames = getProjectAdminNames(project, projects, users);
+  const canManage = isProjectAdmin(user, project, projects);
+  return `
+    <div class="project-group">
+      <div class="project-head">
+        <span class="project-dot" style="background:${getProjectColor(project)}"></span>
+        <h3>${project}</h3>
+        <span class="count">${links.length} recurso${links.length>1 ? 's' : ''}</span>
+        <span class="leader-badge">Admins: ${adminNames}</span>
+        ${canManage ? `<button class="btn-manage admin-only" onclick="openAccessModal('${project.replace(/'/g,"&apos;")}')">Gestionar acceso</button>` : ''}
+      </div>
+      <div class="grid">${links.map(l=>cardHtml(user,l,projects)).join('')}</div>
+    </div>
+  `;
+}
+
+function flatGroupHtml(user, projects, title, links, dotColor){
+  return `
+    <div class="project-group">
+      <div class="project-head">
+        <span class="project-dot" style="background:${dotColor}"></span>
+        <h3>${title}</h3>
+        <span class="count">${links.length} recurso${links.length>1 ? 's' : ''}</span>
+      </div>
+      <div class="grid">${links.map(l=>cardHtml(user,l,projects)).join('')}</div>
+    </div>
+  `;
+}
+
+function lockedSectionHtml(lockedProjects, projects, users){
+  return `
+    <div class="project-group">
+      <div class="project-head">
+        <span class="project-dot" style="background:#4b4f7a"></span>
+        <h3>Proyectos sin acceso</h3>
+        <span class="count">${lockedProjects.length}</span>
+      </div>
+      <div class="grid">
+        ${lockedProjects.map(p => `
+          <div class="locked-card">
+            ${ICON_LOCK}
+            <h4>${p}</h4>
+            <p>Necesitas que un administrador de este proyecto (${getProjectAdminNames(p, projects, users)}) te dé acceso.</p>
+            <button class="btn-request" onclick="requestAccess('${p.replace(/'/g,"&apos;")}')">Solicitar acceso</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderStats(user, allLinks, scopeLinks, filtered, projects){
+  let label = '';
+  if(state.tab==='dfx5'){
+    label = `<div class="stat"><b>${scopeLinks.length}</b>recursos generales</div>`;
+  } else if(state.tab==='propio'){
+    label = `<div class="stat"><b>${scopeLinks.length}</b>links propios (privados)</div>`;
+  } else {
+    const accessibleProjects = getAdminProjects(user, projects);
+    label = `<div class="stat"><b>${accessibleProjects.length}</b>proyectos con acceso</div><div class="stat"><b>${scopeLinks.length}</b>recursos</div>`;
+  }
+  document.getElementById('statsRow').innerHTML = label + `<div class="stat"><b>${filtered.length}</b>coincidencias</div>`;
+}
+
+function renderMain(user, users, projects, filtered, allLinks){
+  const main = document.getElementById('main');
+
+  if(state.tab==='proyecto'){
+    const byProject = {};
+    filtered.forEach(l => { (byProject[l.project] ||= []).push(l); });
+    let html = Object.entries(byProject).map(([project, links]) => projectGroupHtml(user, users, projects, project, links)).join('');
+
+    const lockedProjects = projects.map(p=>p.name).filter(p=>!isProjectAdmin(user, p, projects));
+    if(lockedProjects.length && state.project==='Todos'){
+      html += lockedSectionHtml(lockedProjects, projects, users);
+    }
+    main.innerHTML = html || emptyState('No tienes acceso a ningún proyecto todavía. Pide acceso a un administrador o crea uno nuevo.');
+  } else {
+    if(filtered.length===0){
+      main.innerHTML = emptyState(state.tab==='propio' ? 'Aún no agregaste links propios. Actívalos con "Modo edición".' : 'No se encontraron recursos con esos filtros.');
+      return;
+    }
+    const title = state.tab==='dfx5' ? 'Recursos generales DFX5' : 'Tus links personales';
+    const dot = state.tab==='dfx5' ? '#8b3ffc' : '#38bdf8';
+    main.innerHTML = flatGroupHtml(user, projects, title, filtered, dot);
+  }
+}
+
+function render(){
+  const currentUser = getCurrentUser();
+  const users = loadUsers();
+  const allLinks = loadLinks();
+  const projects = loadProjects();
+
+  renderUserChip(currentUser);
+  renderTabs(currentUser, allLinks, projects);
+
+  let scopeLinks;
+  let accessibleProjects = [];
+  if(state.tab==='dfx5'){
+    scopeLinks = allLinks.filter(l=>l.scope==='dfx5');
+  } else if(state.tab==='propio'){
+    scopeLinks = allLinks.filter(l=>l.scope==='propio' && l.owner===currentUser.id);
+  } else {
+    accessibleProjects = getAdminProjects(currentUser, projects);
+    scopeLinks = allLinks.filter(l=>l.scope==='proyecto' && accessibleProjects.includes(l.project));
+  }
+
+  renderFilters(scopeLinks, accessibleProjects);
+
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  const filtered = scopeLinks.filter(l => {
+    const hay = [l.project, l.name, l.desc, l.category].filter(Boolean).join(' ').toLowerCase();
+    const matchesQ = !q || hay.includes(q);
+    const matchesCat = state.category==='Todos' || l.category===state.category;
+    const matchesProj = state.tab!=='proyecto' || state.project==='Todos' || l.project===state.project;
+    return matchesQ && matchesCat && matchesProj;
+  });
+
+  renderStats(currentUser, allLinks, scopeLinks, filtered, projects);
+  renderMain(currentUser, users, projects, filtered, allLinks);
+  updateFabVisibility(currentUser, projects);
+}
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === '/' && document.activeElement.id !== 'searchInput'){
+    e.preventDefault();
+    document.getElementById('searchInput').focus();
+  }
+  if(e.key === 'Escape'){ closeModal(); closeAccessModal(); closeNewProjectModal(); }
+});
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id === 'overlay') closeModal(); });
+document.getElementById('accessOverlay').addEventListener('click', (e)=>{ if(e.target.id === 'accessOverlay') closeAccessModal(); });
+document.getElementById('projectOverlay').addEventListener('click', (e)=>{ if(e.target.id === 'projectOverlay') closeNewProjectModal(); });
+
+render();
+</script>
+</body>
+</html>
